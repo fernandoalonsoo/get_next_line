@@ -21,6 +21,8 @@ char	*get_next_line(int fd)
 	ssize_t		bytes_read;
 	char		*line;
 
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)
 		return (NULL);
@@ -37,19 +39,16 @@ char	*get_next_line(int fd)
 			break ;
 		bytes_read = read(fd, buffer, BUFFER_SIZE);
 	}
-	if (bytes_read <= 0)
+	free(buffer);
+	if (bytes_read == 0 && remainder && *remainder)
 	{
-		if (remainder && *remainder)
-		{
 			line = ft_strdup(remainder);
 			free(remainder);
 			remainder = NULL;
 			return (line);
-		}
-		free(buffer);
-		return (NULL);
 	}
-	free(buffer);
+	else if (bytes_read < 0)
+		return (NULL);
 	line = ft_check_remainder(&remainder);
 	return (line);
 }
@@ -58,7 +57,7 @@ static char	*ft_check_remainder(char **remainder)
 {
 	char	*line;
 	char	*aux;
-	int		len;
+	size_t	len;
 
 	len = 0;
 	if (!*remainder || **remainder == '\0')
@@ -68,12 +67,23 @@ static char	*ft_check_remainder(char **remainder)
 	line = malloc(len + 2);
 	if (!line)
 		return (NULL);
+	if (len == ft_strlen(*remainder)) 
+	{
+		line = ft_strdup(*remainder);
+		free(*remainder);
+		*remainder = NULL;
+		return (line);
+	}
 	if ((*remainder)[len] == '\n')
 	{
 		line = ft_substr(*remainder, 0, len + 1);
 		aux = ft_strdup(*remainder + len + 1);
 		if (!line || !aux)
+		{
+			free(*remainder);
+			*remainder = NULL;
 			return (NULL);
+		}
 	}
 	else
 		aux = NULL;
@@ -93,7 +103,7 @@ static char	*ft_check_remainder(char **remainder)
 	int i = 0;
 	char *line;
 	while (line = get_next_line(fd))
-        printf("%s", line);  				
+        printf("[%s]", line);  				
 	
 	free(line);          					
 	printf("\nCapacidad del buffer: %d", BUFFER_SIZE);
