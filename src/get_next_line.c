@@ -20,6 +20,7 @@ char	*get_next_line(int fd)
 	char		*buffer;
 	ssize_t		bytes_read;
 	char		*line;
+	char		*aux;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
@@ -29,12 +30,23 @@ char	*get_next_line(int fd)
 	if (!remainder)
 		remainder = ft_strdup("");
 	if (remainder && ft_strchr(remainder, '\n'))
+	{
+		free(buffer);
 		return (ft_check_remainder(&remainder));
+	}
 	bytes_read = read(fd, buffer, BUFFER_SIZE);
 	while (bytes_read > 0)
 	{
 		buffer[bytes_read] = '\0';
-		remainder = ft_strjoin(remainder, buffer);
+		aux = ft_strjoin(remainder, buffer);
+		if (!aux)
+		{
+			free(remainder);
+			free(buffer);
+			return (NULL);
+		}
+		free(remainder);
+		remainder = aux;
 		if (ft_strchr(remainder, '\n'))
 			break ;
 		bytes_read = read(fd, buffer, BUFFER_SIZE);
@@ -42,10 +54,10 @@ char	*get_next_line(int fd)
 	free(buffer);
 	if (bytes_read == 0 && remainder && *remainder)
 	{
-			line = ft_strdup(remainder);
-			free(remainder);
-			remainder = NULL;
-			return (line);
+		line = ft_strdup(remainder);
+		free(remainder);
+		remainder = NULL;
+		return (line);
 	}
 	else if (bytes_read < 0)
 		return (NULL);
@@ -56,57 +68,50 @@ char	*get_next_line(int fd)
 static char	*ft_check_remainder(char **remainder)
 {
 	char	*line;
-	char	*aux;
 	size_t	len;
+	char	*aux;
 
 	len = 0;
 	if (!*remainder || **remainder == '\0')
 		return (NULL);
 	while ((*remainder)[len] != '\n')
 		len++;
-	line = malloc(len + 2);
-	if (!line)
-		return (NULL);
-	if (len == ft_strlen(*remainder)) 
+	line = NULL;
+	if (len == ft_strlen(*remainder))
 	{
 		line = ft_strdup(*remainder);
 		free(*remainder);
-		*remainder = NULL;
+		remainder = NULL;
 		return (line);
 	}
 	if ((*remainder)[len] == '\n')
 	{
 		line = ft_substr(*remainder, 0, len + 1);
 		aux = ft_strdup(*remainder + len + 1);
-		if (!line || !aux)
-		{
-			free(*remainder);
-			*remainder = NULL;
-			return (NULL);
-		}
+		free(*remainder);
+		*remainder = aux;
+		return (line);
 	}
-	else
-		aux = NULL;
+	line = ft_strdup(*remainder);
 	free(*remainder);
-	*remainder = aux;
+	*remainder = NULL;
 	return (line);
 }
 
-/*int main()
-{
-	int fd; 
+// int	main(void)
+// {
+// 	int		fd;
+// 	char	*line;
 
-	fd = open("../prueba2.txt", O_RDONLY);
-	if (fd == -1)
-		return 1;
-	
-	int i = 0;
-	char *line;
-	while (line = get_next_line(fd))
-        printf("[%s]", line);  				
-	
-	free(line);          					
-	printf("\nCapacidad del buffer: %d", BUFFER_SIZE);
-	close(fd);
-	return 0;
-}*/
+// 	fd = open("prueba2.txt", O_RDONLY);
+// 	line = get_next_line(fd);
+// 	while (line)
+// 	{
+// 		printf("%s", line);
+// 		free (line);
+// 		line = get_next_line(fd);
+// 	}
+// 	if (fd >= 0)
+// 		close(fd);
+// 	return (0);
+// }
