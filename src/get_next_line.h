@@ -20,13 +20,11 @@
 # include <fcntl.h>  // Para open
 # include <unistd.h> // Para close
 # include <stdlib.h>
-# include <stdio.h>
 
 // Prototipo de la funcion principal
 char	*get_next_line(int fd);
 
 // Prototipo de funciones extra
-
 size_t	ft_strlen(const char *s);
 char	*ft_strchr(const char *s, int c);
 char	*ft_strjoin(char const *s1, char const *s2);
